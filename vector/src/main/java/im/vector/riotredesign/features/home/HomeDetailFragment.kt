@@ -21,6 +21,8 @@ import android.os.Parcelable
 import android.view.LayoutInflater
 import androidx.core.view.forEachIndexed
 import com.airbnb.mvrx.args
+import com.airbnb.mvrx.fragmentViewModel
+import com.airbnb.mvrx.withState
 import com.google.android.material.bottomnavigation.BottomNavigationItemView
 import com.google.android.material.bottomnavigation.BottomNavigationMenuView
 import im.vector.riotredesign.R
@@ -48,6 +50,8 @@ class HomeDetailFragment : VectorBaseFragment() {
     private val params: HomeDetailParams by args()
     private val unreadCounterBadgeViews = arrayListOf<UnreadCounterBadgeView>()
     private lateinit var currentDisplayMode: RoomListFragment.DisplayMode
+
+    private val viewModel: HomeDetailViewModel by fragmentViewModel()
 
     override fun getLayoutResId(): Int {
         return R.layout.fragment_home_detail
@@ -103,7 +107,7 @@ class HomeDetailFragment : VectorBaseFragment() {
         val menuView = bottomNavigationView.getChildAt(0) as BottomNavigationMenuView
         menuView.forEachIndexed { index, view ->
             val itemView = view as BottomNavigationItemView
-            val badgeLayout = LayoutInflater.from(requireContext()).inflate(R.layout.vector_unread_layout, menuView, false)
+            val badgeLayout = LayoutInflater.from(requireContext()).inflate(R.layout.vector_home_badge_unread_layout, menuView, false)
             val unreadCounterBadgeView: UnreadCounterBadgeView = badgeLayout.findViewById(R.id.actionUnreadCounterBadgeView)
             itemView.addView(badgeLayout)
             unreadCounterBadgeViews.add(index, unreadCounterBadgeView)
@@ -125,6 +129,13 @@ class HomeDetailFragment : VectorBaseFragment() {
                 .replace(R.id.roomListContainer, fragment, fragmentTag)
                 .addToBackStack(fragmentTag)
                 .commit()
+    }
+
+
+    override fun invalidate() = withState(viewModel) {
+        unreadCounterBadgeViews[0].render(UnreadCounterBadgeView.State(it.notificationCountCatchup, it.notificationHighlightCatchup))
+        unreadCounterBadgeViews[1].render(UnreadCounterBadgeView.State(it.notificationCountPeople, it.notificationHighlightPeople))
+        unreadCounterBadgeViews[2].render(UnreadCounterBadgeView.State(it.notificationCountRooms, it.notificationHighlightRooms))
     }
 
     companion object {
